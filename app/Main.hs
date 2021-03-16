@@ -38,9 +38,8 @@ loadBibleDataset :: IO [Test]
 loadBibleDataset = do
   bible <- readFile "assets/kjvbible.txt"
   return [ Test (RegularTest bible "lewd") "Bible test 1"
-         , Test (RegularTest bible "") "Bible test 2"
-         , Test (RegularTest bible "foobarbaz") "Bible test 3"
-         , Test (RegularTest (bible ++ "foobarbaz") "foobarbaz") "Bible test 4"
+         , Test (RegularTest bible "foobarbaz") "Bible test 2"
+         , Test (RegularTest (bible ++ "foobarbaz") "foobarbaz") "Bible test 3"
          ]
 
 main :: IO ()

@@ -1,0 +1,23 @@
+name: Substr CI
+
+on:
+  pull_request
+
+jobs:
+  tests:
+    name: Testing substr
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: dependencies
+      run: |
+        sudo apt install binutils g++ cmake
+        sudo apt install haskell-stack netbase
+    - name: build
+      run: bash build.sh
+    - name: run debug tests
+      run: stack run _build_debug_san/solution
+    - name: run rwdi tests
+      run: stack run _build_rwdi_san/solution
+    - name: run release tests
+      run: stack run _build_release/solution

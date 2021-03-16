@@ -87,7 +87,7 @@ getRealAnswer :: Test
               -> IO (Either String Bool)
 getRealAnswer (Test testInfo testId) = do
   case testInfo of
-    RegularTest text query    -> return $ Right $ isInfixOf text query
+    RegularTest text query    -> return $ Right $ isInfixOf query text
     GenerateEnoentTest        -> return $ Left "No such test file"
     GenerateReadErrTest       -> return $ Left "Test file read error"
     GenerateBadArgsTest       -> return $ Left "Bad usage error"
