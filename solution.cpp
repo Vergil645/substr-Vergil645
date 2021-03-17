@@ -7,7 +7,11 @@ void end_of_main(uint32_t res_len, uint32_t temp_len, FILE *input, uint32_t *p, 
     if (res_len == temp_len) {
         printf("Yes\n");
     } else {
-        printf(code != 0 ? "Error: read error\n" : "No\n");
+        if (code != 0) {
+            fprintf(stderr, "Error: read error\n");
+        } else {
+            printf("No\n");
+        }
     }
     fclose(input);
     free(p);
