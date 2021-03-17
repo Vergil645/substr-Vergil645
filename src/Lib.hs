@@ -16,7 +16,7 @@ import System.Process
 import System.IO.Error ( tryIOError )
 import System.Directory ( doesDirectoryExist, doesPathExist, createDirectory )
 import Control.Parallel.Strategies ( rpar, rseq, runEval, Eval )
-import Control.Monad ( when )
+import Control.Monad ( when, unless )
 import Control.Exception ( throwIO, Exception )
 
 newtype RunPreparationFailed = RunPreparationFailed String
@@ -69,7 +69,7 @@ getStudentAnswer solution (Test testInfo testId) = do
       hasSuchDir <- doesPathExist testPath
       itIsADir <- doesDirectoryExist testPath
       when (hasSuchDir && not itIsADir) (throwIO $ RunPreparationFailed "Path exists and it is not directory")
-      createDirectory testPath
+      unless hasSuchDir $ createDirectory testPath
       (ans, exitCode) <- getInternal [testPath, "random string because directory expected"]
       return $ Right ("No output in the test " ++ show testId ++ " expected", exitCode)
     GenerateBadArgsTest -> do
