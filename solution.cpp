@@ -2,80 +2,67 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
+#include <cerrno>
 
-void end_of_main(uint32_t res_len, uint32_t temp_len, FILE *input, uint32_t *p, char *buf, int code) {
-    if (res_len == temp_len) {
-        printf("Yes\n");
-    } else {
-        if (code != 0) {
-            fprintf(stderr, "Error: read error\n");
-        } else {
-            printf("No\n");
-        }
+size_t calc_prefix(size_t k, char elem, const char *temp, const size_t *p) {
+    while (k > 0 && temp[k] != elem) {
+        k = p[k - 1];
     }
-    fclose(input);
-    free(p);
-    free(buf);
-    exit(code);
+    return temp[k] == elem ? k + 1 : k;
 }
 
-void error(char *message) {
-    fprintf(stderr, "%s\n", message);
-    exit(-1);
-}
-
+// Pred: 2 arguments: argv[1] -- filename
+//                    argv[2] -- template string
+// Post: print to stdout is argv[2] found in file argv[1] as a substring
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        error((char *) "Error: 2 arguments expected");
+        fprintf(stderr, "Error: 2 arguments expected\n");
+        return -1;
     }
 
     FILE *input = fopen(argv[1], "rb");
-    if (input == nullptr) {
-        error((char *) "Error: cannot open the file");
+    if (errno) {
+        fprintf(stderr, "Error: cannot open the file\n");
+        return -1;
     }
 
-    size_t temp_len = strlen(argv[2]);
+    char *temp = argv[2];
+    size_t temp_len = strlen(temp);
 
     // Knuth–Morris–Pratt algorithm
-    auto *p = (uint32_t *) calloc(temp_len, 4);
+    auto *p = (size_t *) calloc(temp_len, sizeof(size_t));
+    if (p == nullptr) {
+        fprintf(stderr, "Error: cannot allocate a memory\n");
+        return -1;
+    }
     p[0] = 0;
     for (size_t i = 1; i < temp_len; i++) {
-        uint32_t k = p[i - 1];
-        while (k > 0 && argv[2][k] != argv[2][i]) {
-            k = p[k - 1];
-        }
-        if (argv[2][k] == argv[2][i]) {
-            k++;
-        }
-        p[i] = k;
+        p[i] = calc_prefix(p[i - 1], temp[i], temp, p);
     }
 
-    size_t buf_size = 1024;
-    char *buf = (char *) calloc(buf_size, 1);
-    uint32_t res_len = 0;
-
-    while (true) {
-        size_t cnt = fread(buf, 1, buf_size, input);
+    const size_t buf_size = 1024;
+    char buf[buf_size];
+    size_t res_len = 0;
+    bool flag = true;
+    while (flag && !ferror(input) && !feof(input)) {
+        size_t cnt = fread(buf, sizeof(char), buf_size, input);
         for (size_t i = 0; i < cnt; i++) {
-            uint32_t k = res_len;
-            while (k > 0 && argv[2][k] != buf[i]) {
-                k = p[k - 1];
-            }
-            if (argv[2][k] == buf[i]) {
-                k++;
-            }
-            res_len = k;
+            res_len = calc_prefix(res_len, buf[i], temp, p);
             if (res_len == temp_len) {
-                end_of_main(res_len, temp_len, input, p, buf, 0);
+                flag = false;
+                break;
             }
-        }
-        if (ferror(input) != 0) {
-            end_of_main(res_len, temp_len, input, p, buf, -1);
-        }
-        if (feof(input) != 0) {
-            break;
         }
     }
-    end_of_main(res_len, temp_len, input, p, buf, 0);
-    return 0;
+
+    int exit_code = 0;
+    if (ferror(input)) {
+        fprintf(stderr, "Error: read error\n");
+        exit_code = -1;
+    } else {
+        fprintf(stdout, res_len == temp_len ? "Yes\n" : "No\n");
+    }
+    fclose(input);
+    free(p);
+    return exit_code;
 }
