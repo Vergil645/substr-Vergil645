@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     size_t temp_len = strlen(temp);
 
     // Knuth–Morris–Pratt algorithm
-    auto *p = (size_t *) calloc(temp_len, sizeof(size_t));
+    auto *p = (size_t *) malloc(temp_len * sizeof(size_t));
     if (p == nullptr) {
         fprintf(stderr, "Error: cannot allocate a memory\n");
         return -1;
