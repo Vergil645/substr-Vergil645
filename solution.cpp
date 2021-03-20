@@ -16,7 +16,7 @@ size_t calc_prefix(size_t k, char elem, const char *temp, const size_t *p) {
 // Post: print to stdout is argv[2] found in file argv[1] as a substring
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        fprintf(stderr, "Error: 2 arguments expected\n");
+        fprintf(stderr, "Usage: solution <filename> <template_string>\n");
         return -1;
     }
 
@@ -40,19 +40,14 @@ int main(int argc, char *argv[]) {
         p[i] = calc_prefix(p[i - 1], temp[i], temp, p);
     }
 
-    const size_t buf_size = 1024;
-    char buf[buf_size];
     size_t res_len = 0;
-    bool flag = true;
-    while (flag && !ferror(input) && !feof(input)) {
-        size_t cnt = fread(buf, sizeof(char), buf_size, input);
-        for (size_t i = 0; i < cnt; i++) {
-            res_len = calc_prefix(res_len, buf[i], temp, p);
-            if (res_len == temp_len) {
-                flag = false;
-                break;
-            }
+    int symbol;
+    while(res_len != temp_len) {
+        symbol = fgetc(input);
+        if (feof(input) || ferror(input)) {
+            break;
         }
+        res_len = calc_prefix(res_len, (char) symbol, temp, p);
     }
 
     int exit_code = 0;
